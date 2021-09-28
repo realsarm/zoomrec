@@ -196,7 +196,7 @@ def check_connecting(zoom_pid, start_date, duration):
         time.sleep(2)
 
 
-def join_meeting(meet_id):
+def join_meeting(meet_id, username):
     logging.info("Join a meeting..")
     found_join_meeting = False
     try:
@@ -222,7 +222,7 @@ def join_meeting(meet_id):
     pyautogui.press('tab')
     pyautogui.press('tab')
     pyautogui.hotkey('ctrl', 'a')
-    pyautogui.write(random.choice(NAME_LIST), interval=0.1)
+    pyautogui.write(username, interval=0.1)
 
     # Configure
     pyautogui.press('tab')
@@ -318,7 +318,7 @@ def join_audio(description):
             return False
 
 
-def join(meet_id, meet_pw, duration, description):
+def join(meet_id, username, meet_pw, duration, description):
     global VIDEO_PANEL_HIDED
     ffmpeg_debug = None
 
@@ -365,7 +365,7 @@ def join(meet_id, meet_pw, duration, description):
     logging.info("Zoom started!")
     start_date = datetime.now()
 
-    joined = join_meeting(meet_id)
+    joined = join_meeting(meet_id, username)
     if not joined:
         logging.error("Failed to join meeting!")
         os.killpg(os.getpgid(zoom.pid), signal.SIGQUIT)
@@ -510,7 +510,7 @@ def join(meet_id, meet_pw, duration, description):
             os.killpg(os.getpgid(ffmpeg_debug.pid), signal.SIGQUIT)
             atexit.unregister(os.killpg)
         time.sleep(2)
-        join(meet_id, meet_pw, duration, description)
+        join(meet_id, username, meet_pw, duration, description)
 
     time.sleep(2)
     logging.info("Enter fullscreen..")
@@ -743,14 +743,14 @@ def join_ongoing_meeting():
                         if str(row["record"]) == 'true':
                             logging.info(
                                 "Join meeting that is currently running..")
-                            join(meet_id=row["id"], meet_pw=row["password"],
+                            join(meet_id=row["id"], username=row["username"], meet_pw=row["password"],
                                  duration=recent_duration, description=row["description"])
                 else:  # crosses midnight
                     if curr_time >= start_time or curr_time <= end_time:
                         if str(row["record"]) == 'true':
                             logging.info(
                                 "Join meeting that is currently running..")
-                            join(meet_id=row["id"], meet_pw=row["password"],
+                            join(meet_id=row["id"], username=row["username"], meet_pw=row["password"],
                                  duration=recent_duration, description=row["description"])
 
 
@@ -764,6 +764,7 @@ def setup_schedule():
                              + ".at(\"" \
                              + (datetime.strptime(row["time"], '%H:%M') - timedelta(minutes=1)).strftime('%H:%M') \
                              + "\").do(join, meet_id=\"" + row["id"] \
+                             + "\", username=\"" + row["username"] \
                              + "\", meet_pw=\"" + row["password"] \
                              + "\", duration=" + str(int(row["duration"]) * 60) \
                              + ", description=\"" + row["description"] + "\")"
